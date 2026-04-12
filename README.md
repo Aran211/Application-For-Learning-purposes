@@ -16,7 +16,7 @@ Spring Boot + Angular veebiprojekt: kasutaja autentimine (JWT), jalgpalli tulemu
 docker compose up -d postgres
 ```
 
-See käivitab PostgreSQL 16 konteineri (`localhost:5432`, andmebaas `ron_project`, kasutaja `postgres`, parool `postgres`).
+See käivitab PostgreSQL konteineri (`localhost:5432`, andmebaas `ron_project`, kasutaja `postgres`, parool `postgres`).
 
 ### 2. Keskkonnamuutujad
 
@@ -31,39 +31,13 @@ cp .env.example .env
 | `APP_JWT_SECRET` | JWT allkirjastamise võti (vähemalt 32 tähemärki) |
 | `APP_FOOTBALL_API_KEY` | [api-sports.io](https://www.api-football.com/) API võti |
 
-PowerShellis saab muutujad ka otse seada:
-
-```powershell
-$env:APP_JWT_SECRET="replace-this-with-a-long-random-secret-at-least-32-characters"
-$env:APP_FOOTBALL_API_KEY="sinu-api-võti"
-```
-
 ### 3. Backend
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Backend käivitub aadressil **http://localhost:8080**.
-
-### 4. Frontend
-
-```bash
-cd ../ron-project-frontend
-npm install
-npm start
-```
-
-Frontend käivitub aadressil **http://localhost:4200** ja suhtleb backendiga `localhost:8080` peal.
-
-## Alternatiiv: kõik Docker Compose'iga
-
-Käivitab nii backendi kui andmebaasi konteinerites:
-
-```bash
-cp .env.example .env
-docker compose up --build
-```
+Backend käivitub aadressil **http://localhost:8081**.
 
 Rakendus: `http://localhost:8080` | PostgreSQL: `localhost:5432`
 
@@ -77,7 +51,7 @@ Rakendus: `http://localhost:8080` | PostgreSQL: `localhost:5432`
 ./mvnw test -Dtest=AuthenticationIntegrationTests
 ```
 
-## API lõpp-punktid
+## API
 
 | Meetod | URL | Kirjeldus | Auth |
 |--------|-----|-----------|------|
@@ -94,7 +68,6 @@ Rakendus: `http://localhost:8080` | PostgreSQL: `localhost:5432`
 | PUT | `/api/workout-logs/{id}` | Kirje muutmine | JWT |
 | DELETE | `/api/workout-logs/{id}` | Kirje kustutamine | JWT |
 
-Kaitstud lõpp-punktidele tuleb lisada päis: `Authorization: Bearer <token>`
 
 ## Projekti struktuur
 
