@@ -1,0 +1,7 @@
+.git
+.idea
+target
+database
+application_configuration.properties
+HELP.md
+*.log

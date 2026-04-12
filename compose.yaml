@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ron-project-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ron_project
+      APP_DATASOURCE_USERNAME: postgres
+      APP_DATASOURCE_PASSWORD: postgres
+      APP_JWT_SECRET: ${APP_JWT_SECRET}
+      APP_FOOTBALL_API_TOKEN: ${APP_FOOTBALL_API_TOKEN}
+      APP_FOOTBALL_API_BASE_URL: https://api.football-data.org
+    ports:
+      - "8081:8080"
+
+  postgres:
+    image: postgres:16
+    container_name: ron-project-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ron_project
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ron_project"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
