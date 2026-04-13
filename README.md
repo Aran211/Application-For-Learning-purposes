@@ -1,3 +1,4 @@
+#Kuna lubatud fronti projecti link jäi meilist välja siis lisan siia :) https://test.washlab.ee/
 # Ron Project
 
 Spring Boot + Angular veebiprojekt: kasutaja autentimine (JWT), jalgpalli tulemused, märkmed ja treeningulogi.
