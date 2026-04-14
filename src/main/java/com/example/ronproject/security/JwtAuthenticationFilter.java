@@ -12,6 +12,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.ronproject.user.CurrentUser;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,17 +44,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String username;
+        Claims claims;
         try {
-            username = jwtService.extractUsername(token);
-        } catch (RuntimeException ex) {
+            claims = jwtService.parseClaims(token);
+        } catch (JwtException ex) {
             filterChain.doFilter(request, response);
             return;
         }
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtService.isValid(token, (CurrentUser) userDetails)) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
+            if (jwtService.isValid(claims, (CurrentUser) userDetails)) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

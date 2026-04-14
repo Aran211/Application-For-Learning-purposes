@@ -47,12 +47,7 @@ public class JwtService {
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        return parseClaims(token).getSubject();
-    }
-
-    public boolean isValid(String token, CurrentUser currentUser) {
-        Claims claims = parseClaims(token);
+    public boolean isValid(Claims claims, CurrentUser currentUser) {
         return currentUser.getUsername().equals(claims.getSubject())
                 && claims.getExpiration().after(new Date())
                 && !isRevoked(claims.getId());
@@ -74,7 +69,7 @@ public class JwtService {
         return jti != null && revokedTokenRepository.existsByTokenId(jti);
     }
 
-    private Claims parseClaims(String token) {
+    public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(signingKey)
                 .build()

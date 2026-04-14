@@ -12,18 +12,24 @@ public class CurrentUser implements UserDetails {
 
     private final UUID id;
     private final String email;
+    private final String displayName;
     private final String passwordHash;
     private final UserRole role;
 
     public CurrentUser(UserAccount userAccount) {
         this.id = userAccount.getId();
         this.email = userAccount.getEmail();
+        this.displayName = userAccount.getUsername();
         this.passwordHash = userAccount.getPasswordHash();
         this.role = userAccount.getRole();
     }
 
     public UUID getId() {
         return id;
+    }
+
+    public String getDisplayName() {
+        return displayName;
     }
 
     @Override

@@ -38,12 +38,19 @@ public class AuthController {
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void logout(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
-        authService.logout(authHeader.substring(7));
+        authService.logout(extractToken(authHeader));
     }
 
     @DeleteMapping("/me")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deleteAccount(CurrentUser currentUser, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
-        authService.deleteAccount(currentUser, authHeader.substring(7));
+        authService.deleteAccount(currentUser, extractToken(authHeader));
+    }
+
+    private String extractToken(String authHeader) {
+        if (!authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Invalid Authorization header");
+        }
+        return authHeader.substring(7);
     }
 }

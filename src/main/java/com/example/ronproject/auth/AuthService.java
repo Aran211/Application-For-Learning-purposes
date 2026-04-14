@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -55,7 +56,12 @@ public class AuthService {
         userAccount.setUsername(username);
         userAccount.setPasswordHash(passwordEncoder.encode(request.password()));
         userAccount.setRole(UserRole.USER);
-        UserAccount savedUser = userAccountRepository.save(userAccount);
+        UserAccount savedUser;
+        try {
+            savedUser = userAccountRepository.saveAndFlush(userAccount);
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException("Email or username is already taken");
+        }
         log.info("New user registered: {}", email);
 
         CurrentUser currentUser = new CurrentUser(savedUser);
@@ -70,16 +76,14 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         String email = request.email().trim().toLowerCase();
         log.info("Login attempt for: {}", email);
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.password()));
-
-        UserAccount userAccount = userAccountRepository.findByEmailAndDeletedFalse(email)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
-        CurrentUser currentUser = new CurrentUser(userAccount);
+        var auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, request.password()));
+        CurrentUser currentUser = (CurrentUser) auth.getPrincipal();
         return new AuthResponse(
                 jwtService.generateToken(currentUser),
-                userAccount.getId(),
-                userAccount.getUsername(),
-                userAccount.getEmail()
+                currentUser.getId(),
+                currentUser.getDisplayName(),
+                currentUser.getUsername()
         );
     }
 
