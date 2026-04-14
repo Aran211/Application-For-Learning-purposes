@@ -34,8 +34,7 @@ public class MemoService {
 
     @Transactional
     public MemoResponse createMemo(UUID userId, MemoRequest request) {
-        UserAccount userAccount = userAccountRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        UserAccount userAccount = userAccountRepository.getReferenceById(userId);
         Memo memo = new Memo();
         memo.setUser(userAccount);
         memo.setTitle(request.title().trim());

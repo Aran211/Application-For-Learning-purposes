@@ -37,8 +37,7 @@ public class WorkoutLogService {
 
     @Transactional
     public WorkoutLogResponse createWorkoutLog(UUID userId, WorkoutLogRequest request) {
-        UserAccount userAccount = userAccountRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        UserAccount userAccount = userAccountRepository.getReferenceById(userId);
         WorkoutLog workoutLog = new WorkoutLog();
         workoutLog.setUser(userAccount);
         workoutLog.setExercise(request.exercise().trim());

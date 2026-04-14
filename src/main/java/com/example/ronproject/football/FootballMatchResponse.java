@@ -1,7 +1,6 @@
 package com.example.ronproject.football;
 
 import java.time.Instant;
-import java.util.List;
 
 public record FootballMatchResponse(
         String fixtureId,
