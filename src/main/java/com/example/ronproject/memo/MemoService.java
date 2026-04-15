@@ -1,10 +1,13 @@
 package com.example.ronproject.memo;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +20,7 @@ import com.example.ronproject.user.UserAccountRepository;
 public class MemoService {
 
     private static final Logger log = LoggerFactory.getLogger(MemoService.class);
+    private static final Sort DEFAULT_SORT = Sort.by(Sort.Direction.DESC, "updatedAt");
 
     private final MemoRepository memoRepository;
     private final UserAccountRepository userAccountRepository;
@@ -26,10 +30,9 @@ public class MemoService {
         this.userAccountRepository = userAccountRepository;
     }
 
-    public List<MemoResponse> getUserMemos(UUID userId) {
-        return memoRepository.findAllByUserIdOrderByUpdatedAtDesc(userId).stream()
-                .map(MemoResponse::from)
-                .toList();
+    public Page<MemoResponse> getUserMemos(UUID userId, Pageable pageable) {
+        Pageable effective = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), DEFAULT_SORT);
+        return memoRepository.findAllByUserId(userId, effective).map(MemoResponse::from);
     }
 
     @Transactional

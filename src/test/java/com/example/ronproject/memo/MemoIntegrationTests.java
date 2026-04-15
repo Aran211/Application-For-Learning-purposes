@@ -68,9 +68,10 @@ class MemoIntegrationTests {
         mockMvc.perform(get("/api/memos")
                         .header(HttpHeaders.AUTHORIZATION, bearer(primaryUser.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].title").value("Updated first"))
-                .andExpect(jsonPath("$[1].title").value("Second memo"));
+                .andExpect(jsonPath("$.page.totalElements").value(2))
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].title").value("Updated first"))
+                .andExpect(jsonPath("$.content[1].title").value("Second memo"));
     }
 
     @Test
@@ -133,8 +134,8 @@ class MemoIntegrationTests {
         mockMvc.perform(get("/api/memos")
                         .header(HttpHeaders.AUTHORIZATION, bearer(user.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.page.totalElements").value(0))
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @Test

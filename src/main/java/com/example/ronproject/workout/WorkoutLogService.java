@@ -1,10 +1,13 @@
 package com.example.ronproject.workout;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +20,10 @@ import com.example.ronproject.user.UserAccountRepository;
 public class WorkoutLogService {
 
     private static final Logger log = LoggerFactory.getLogger(WorkoutLogService.class);
+    private static final Sort DEFAULT_SORT = Sort.by(
+            Sort.Order.desc("workoutDate"),
+            Sort.Order.desc("createdAt")
+    );
 
     private final WorkoutLogRepository workoutLogRepository;
     private final UserAccountRepository userAccountRepository;
@@ -29,10 +36,9 @@ public class WorkoutLogService {
         this.userAccountRepository = userAccountRepository;
     }
 
-    public List<WorkoutLogResponse> getWorkoutLogs(UUID userId) {
-        return workoutLogRepository.findAllByUserIdOrderByWorkoutDateDescCreatedAtDesc(userId).stream()
-                .map(WorkoutLogResponse::from)
-                .toList();
+    public Page<WorkoutLogResponse> getWorkoutLogs(UUID userId, Pageable pageable) {
+        Pageable effective = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), DEFAULT_SORT);
+        return workoutLogRepository.findAllByUserId(userId, effective).map(WorkoutLogResponse::from);
     }
 
     @Transactional

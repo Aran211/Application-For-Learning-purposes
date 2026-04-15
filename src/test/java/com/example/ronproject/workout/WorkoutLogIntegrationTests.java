@@ -60,9 +60,10 @@ class WorkoutLogIntegrationTests {
         mockMvc.perform(get("/api/workouts")
                         .header(HttpHeaders.AUTHORIZATION, bearer(primaryUser.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].exercise").value("Pull Up"))
-                .andExpect(jsonPath("$[1].exercise").value("Bench Press"));
+                .andExpect(jsonPath("$.page.totalElements").value(2))
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].exercise").value("Pull Up"))
+                .andExpect(jsonPath("$.content[1].exercise").value("Bench Press"));
     }
 
     @Test
@@ -130,7 +131,8 @@ class WorkoutLogIntegrationTests {
         mockMvc.perform(get("/api/workouts")
                         .header(HttpHeaders.AUTHORIZATION, bearer(user.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.page.totalElements").value(0))
+                .andExpect(jsonPath("$.content.length()").value(0));
     }
 
     @Test

@@ -1,8 +1,10 @@
 package com.example.ronproject.memo;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,8 +31,8 @@ public class MemoController {
     }
 
     @GetMapping
-    List<MemoResponse> getMemos(CurrentUser currentUser) {
-        return memoService.getUserMemos(currentUser.getId());
+    Page<MemoResponse> getMemos(CurrentUser currentUser, @PageableDefault(size = 50) Pageable pageable) {
+        return memoService.getUserMemos(currentUser.getId(), pageable);
     }
 
     @PostMapping

@@ -184,7 +184,7 @@ class AuthenticationIntegrationTests {
                         .header(HttpHeaders.AUTHORIZATION, bearer(token)))
                 .andExpect(status().isOk())
                 .andExpect(header().doesNotExist(HttpHeaders.WWW_AUTHENTICATE))
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     @Test
