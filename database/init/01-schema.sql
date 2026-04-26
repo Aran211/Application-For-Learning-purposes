@@ -45,13 +45,15 @@ CREATE TABLE IF NOT EXISTS workout_logs (
 CREATE INDEX IF NOT EXISTS idx_workout_logs_user_id ON workout_logs (user_id);
 CREATE INDEX IF NOT EXISTS idx_workout_logs_workout_date ON workout_logs (workout_date DESC);
 
-CREATE TABLE IF NOT EXISTS revoked_tokens (
+CREATE TABLE IF NOT EXISTS issued_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     token_id VARCHAR(255) NOT NULL UNIQUE,
     user_id UUID NOT NULL,
-    revoked_at TIMESTAMPTZ NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL
+    issued_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_revoked_tokens_token_id ON revoked_tokens (token_id);
-CREATE INDEX IF NOT EXISTS idx_revoked_tokens_expires_at ON revoked_tokens (expires_at);
+CREATE INDEX IF NOT EXISTS idx_issued_tokens_token_id ON issued_tokens (token_id);
+CREATE INDEX IF NOT EXISTS idx_issued_tokens_user_id ON issued_tokens (user_id);
+CREATE INDEX IF NOT EXISTS idx_issued_tokens_expires_at ON issued_tokens (expires_at);

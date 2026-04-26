@@ -26,25 +26,29 @@ public class JwtService {
 
     private final JwtProperties jwtProperties;
     private final SecretKey signingKey;
-    private final RevokedTokenRepository revokedTokenRepository;
+    private final IssuedTokenRepository issuedTokenRepository;
 
-    public JwtService(JwtProperties jwtProperties, RevokedTokenRepository revokedTokenRepository) {
+    public JwtService(JwtProperties jwtProperties, IssuedTokenRepository issuedTokenRepository) {
         this.jwtProperties = jwtProperties;
         this.signingKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
-        this.revokedTokenRepository = revokedTokenRepository;
+        this.issuedTokenRepository = issuedTokenRepository;
     }
 
+    @Transactional
     public String generateToken(CurrentUser currentUser) {
+        String jti = UUID.randomUUID().toString();
         Instant now = Instant.now();
         Instant expiresAt = now.plus(jwtProperties.getExpiration());
-        return Jwts.builder()
-                .id(UUID.randomUUID().toString())
+        String token = Jwts.builder()
+                .id(jti)
                 .subject(currentUser.getUsername())
                 .claim("uid", currentUser.getId().toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
                 .signWith(signingKey)
                 .compact();
+        issuedTokenRepository.save(new IssuedToken(jti, currentUser.getId(), now, expiresAt));
+        return token;
     }
 
     public boolean isValid(Claims claims, CurrentUser currentUser) {
@@ -57,16 +61,20 @@ public class JwtService {
     public void revokeToken(String token) {
         Claims claims = parseClaims(token);
         String jti = claims.getId();
-        if (jti != null && !revokedTokenRepository.existsByTokenId(jti)) {
-            UUID userId = UUID.fromString(claims.get("uid", String.class));
-            Instant expiresAt = claims.getExpiration().toInstant();
-            revokedTokenRepository.save(new RevokedToken(jti, userId, expiresAt));
-            log.info("Token revoked: jti={}, userId={}", jti, userId);
-        }
+        if (jti == null) return;
+        issuedTokenRepository.findByTokenId(jti).ifPresent(issued -> {
+            if (!issued.isRevoked()) {
+                issued.revoke();
+                log.info("Token revoked: jti={}, userId={}", jti, issued.getUserId());
+            }
+        });
     }
 
     public boolean isRevoked(String jti) {
-        return jti != null && revokedTokenRepository.existsByTokenId(jti);
+        if (jti == null) return true;
+        return issuedTokenRepository.findByTokenId(jti)
+                .map(IssuedToken::isRevoked)
+                .orElse(true);
     }
 
     public Claims parseClaims(String token) {

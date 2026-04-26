@@ -11,8 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "revoked_tokens")
-public class RevokedToken {
+@Table(name = "issued_tokens")
+public class IssuedToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,17 +25,20 @@ public class RevokedToken {
     private UUID userId;
 
     @Column(nullable = false)
-    private Instant revokedAt;
+    private Instant issuedAt;
 
     @Column(nullable = false)
     private Instant expiresAt;
 
-    protected RevokedToken() {}
+    @Column
+    private Instant revokedAt;
 
-    public RevokedToken(String tokenId, UUID userId, Instant expiresAt) {
+    protected IssuedToken() {}
+
+    public IssuedToken(String tokenId, UUID userId, Instant issuedAt, Instant expiresAt) {
         this.tokenId = tokenId;
         this.userId = userId;
-        this.revokedAt = Instant.now();
+        this.issuedAt = issuedAt;
         this.expiresAt = expiresAt;
     }
 
@@ -51,11 +54,23 @@ public class RevokedToken {
         return userId;
     }
 
-    public Instant getRevokedAt() {
-        return revokedAt;
+    public Instant getIssuedAt() {
+        return issuedAt;
     }
 
     public Instant getExpiresAt() {
         return expiresAt;
+    }
+
+    public Instant getRevokedAt() {
+        return revokedAt;
+    }
+
+    public void revoke() {
+        this.revokedAt = Instant.now();
+    }
+
+    public boolean isRevoked() {
+        return revokedAt != null;
     }
 }

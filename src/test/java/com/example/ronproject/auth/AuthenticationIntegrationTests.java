@@ -16,7 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.ronproject.security.RevokedTokenRepository;
+import com.example.ronproject.security.IssuedTokenRepository;
 import com.example.ronproject.user.UserAccountRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -33,11 +33,11 @@ class AuthenticationIntegrationTests {
     private UserAccountRepository userAccountRepository;
 
     @Autowired
-    private RevokedTokenRepository revokedTokenRepository;
+    private IssuedTokenRepository issuedTokenRepository;
 
     @BeforeEach
     void setUp() {
-        revokedTokenRepository.deleteAll();
+        issuedTokenRepository.deleteAll();
         userAccountRepository.deleteAll();
     }
 
