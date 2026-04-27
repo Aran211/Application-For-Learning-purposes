@@ -10,25 +10,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
+import com.example.ronproject.IntegrationTestBase;
 import com.example.ronproject.auth.AuthResponse;
-import com.example.ronproject.auth.RegisterRequest;
 import com.example.ronproject.user.UserAccountRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class MemoIntegrationTests {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    @Autowired
-    private MockMvc mockMvc;
+class MemoIntegrationTests extends IntegrationTestBase {
 
     @Autowired
     private MemoRepository memoRepository;
@@ -48,9 +38,7 @@ class MemoIntegrationTests {
         AuthResponse otherUser = registerUser("other@example.com", "other");
 
         String firstMemoId = createMemo(primaryUser.token(), "First memo", "First content")
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                .andReturn().getResponse().getContentAsString();
         String createdMemoId = OBJECT_MAPPER.readTree(firstMemoId).get("id").asText();
 
         createMemo(primaryUser.token(), "Second memo", "Second content")
@@ -81,7 +69,7 @@ class MemoIntegrationTests {
         mockMvc.perform(post("/api/memos")
                         .header(HttpHeaders.AUTHORIZATION, bearer(user.token()))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(OBJECT_MAPPER.writeValueAsString(new MemoRequest("  Training Plan  ", "  Bench press  ")) ))
+                        .content(OBJECT_MAPPER.writeValueAsString(new MemoRequest("  Training Plan  ", "  Bench press  "))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Training Plan"))
                 .andExpect(jsonPath("$.content").value("Bench press"));
@@ -105,9 +93,7 @@ class MemoIntegrationTests {
         AuthResponse otherUser = registerUser("other@example.com", "other");
 
         String responseBody = createMemo(owner.token(), "Private memo", "owner content")
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                .andReturn().getResponse().getContentAsString();
         String createdMemoId = OBJECT_MAPPER.readTree(responseBody).get("id").asText();
 
         mockMvc.perform(put("/api/memos/{memoId}", createdMemoId)
@@ -122,9 +108,7 @@ class MemoIntegrationTests {
         AuthResponse user = registerUser("ron@example.com", "ron");
 
         String responseBody = createMemo(user.token(), "Delete me", "Soon gone")
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                .andReturn().getResponse().getContentAsString();
         String createdMemoId = OBJECT_MAPPER.readTree(responseBody).get("id").asText();
 
         mockMvc.perform(delete("/api/memos/{memoId}", createdMemoId)
@@ -152,29 +136,10 @@ class MemoIntegrationTests {
                 .andExpect(status().isNotFound());
     }
 
-    private org.springframework.test.web.servlet.ResultActions createMemo(
-            String token,
-            String title,
-            String content
-    ) throws Exception {
+    private ResultActions createMemo(String token, String title, String content) throws Exception {
         return mockMvc.perform(post("/api/memos")
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(OBJECT_MAPPER.writeValueAsString(new MemoRequest(title, content))));
-    }
-
-    private AuthResponse registerUser(String email, String username) throws Exception {
-        String responseBody = mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(OBJECT_MAPPER.writeValueAsString(new RegisterRequest(email, username, "Password123"))))
-                .andExpect(status().isCreated())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return OBJECT_MAPPER.readValue(responseBody, AuthResponse.class);
-    }
-
-    private String bearer(String token) {
-        return "Bearer " + token;
     }
 }

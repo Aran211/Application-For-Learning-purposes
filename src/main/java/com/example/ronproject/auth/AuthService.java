@@ -5,11 +5,13 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.ronproject.security.JwtService;
 import com.example.ronproject.user.CurrentUser;
@@ -45,10 +47,10 @@ public class AuthService {
         String username = request.username().trim();
 
         if (userAccountRepository.existsByEmailAndDeletedFalse(email)) {
-            throw new IllegalArgumentException("Email is already registered");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is already registered");
         }
         if (userAccountRepository.existsByUsernameAndDeletedFalse(username)) {
-            throw new IllegalArgumentException("Username is already taken");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is already taken");
         }
 
         UserAccount userAccount = new UserAccount();
@@ -60,7 +62,7 @@ public class AuthService {
         try {
             savedUser = userAccountRepository.saveAndFlush(userAccount);
         } catch (DataIntegrityViolationException ex) {
-            throw new IllegalArgumentException("Email or username is already taken");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email or username is already taken");
         }
         log.info("New user registered: {}", email);
 
@@ -95,7 +97,7 @@ public class AuthService {
     @Transactional
     public void deleteAccount(CurrentUser currentUser, String token) {
         UserAccount userAccount = userAccountRepository.findById(currentUser.getId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         String suffix = "_deleted_" + UUID.randomUUID();
         userAccount.setEmail(userAccount.getEmail() + suffix);
         userAccount.setUsername(userAccount.getUsername() + suffix);

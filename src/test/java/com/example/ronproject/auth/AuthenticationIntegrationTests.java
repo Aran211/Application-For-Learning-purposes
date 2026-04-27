@@ -10,24 +10,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
+import com.example.ronproject.IntegrationTestBase;
 import com.example.ronproject.security.IssuedTokenRepository;
 import com.example.ronproject.user.UserAccountRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class AuthenticationIntegrationTests {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    @Autowired
-    private MockMvc mockMvc;
+class AuthenticationIntegrationTests extends IntegrationTestBase {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
@@ -47,7 +37,7 @@ class AuthenticationIntegrationTests {
     void registerReturnsJwtToken() throws Exception {
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(registerJson("ron@example.com", "ron", "Password123")))
+                        .content(OBJECT_MAPPER.writeValueAsString(new RegisterRequest("ron@example.com", "ron", "Password123"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").isString())
                 .andExpect(jsonPath("$.userId").isNotEmpty())
@@ -61,7 +51,7 @@ class AuthenticationIntegrationTests {
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(registerJson("ron@example.com", "ron2", "Password123")))
+                        .content(OBJECT_MAPPER.writeValueAsString(new RegisterRequest("ron@example.com", "ron2", "Password123"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Email is already registered"));
     }
@@ -72,7 +62,7 @@ class AuthenticationIntegrationTests {
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(registerJson("other@example.com", "ron", "Password123")))
+                        .content(OBJECT_MAPPER.writeValueAsString(new RegisterRequest("other@example.com", "ron", "Password123"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Username is already taken"));
     }
@@ -85,7 +75,7 @@ class AuthenticationIntegrationTests {
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(loginJson("ron@example.com", "Password123")))
+                        .content(OBJECT_MAPPER.writeValueAsString(new LoginRequest("ron@example.com", "Password123"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isString())
                 .andExpect(jsonPath("$.email").value("ron@example.com"))
@@ -98,7 +88,7 @@ class AuthenticationIntegrationTests {
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(loginJson("ron@example.com", "wrong-password")))
+                        .content(OBJECT_MAPPER.writeValueAsString(new LoginRequest("ron@example.com", "wrong-password"))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("Invalid credentials"));
     }
@@ -150,7 +140,7 @@ class AuthenticationIntegrationTests {
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(loginJson("ron@example.com", "Password123")))
+                        .content(OBJECT_MAPPER.writeValueAsString(new LoginRequest("ron@example.com", "Password123"))))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -164,7 +154,7 @@ class AuthenticationIntegrationTests {
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(registerJson("ron@example.com", "ron2", "Password123")))
+                        .content(OBJECT_MAPPER.writeValueAsString(new RegisterRequest("ron@example.com", "ron2", "Password123"))))
                 .andExpect(status().isCreated());
     }
 
@@ -196,32 +186,11 @@ class AuthenticationIntegrationTests {
 
     // ───── Helpers ─────
 
-    private AuthResponse registerUser(String email, String username) throws Exception {
-        String body = mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(registerJson(email, username, "Password123")))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        return OBJECT_MAPPER.readValue(body, AuthResponse.class);
-    }
-
     private AuthResponse loginUser(String email) throws Exception {
         String body = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(loginJson(email, "Password123")))
+                        .content(OBJECT_MAPPER.writeValueAsString(new LoginRequest(email, "Password123"))))
                 .andReturn().getResponse().getContentAsString();
         return OBJECT_MAPPER.readValue(body, AuthResponse.class);
-    }
-
-    private String registerJson(String email, String username, String password) throws Exception {
-        return OBJECT_MAPPER.writeValueAsString(new RegisterRequest(email, username, password));
-    }
-
-    private String loginJson(String email, String password) throws Exception {
-        return OBJECT_MAPPER.writeValueAsString(new LoginRequest(email, password));
-    }
-
-    private String bearer(String token) {
-        return "Bearer " + token;
     }
 }

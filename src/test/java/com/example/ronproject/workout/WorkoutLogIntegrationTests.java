@@ -12,26 +12,15 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
+import com.example.ronproject.IntegrationTestBase;
 import com.example.ronproject.auth.AuthResponse;
-import com.example.ronproject.auth.RegisterRequest;
 import com.example.ronproject.user.UserAccountRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class WorkoutLogIntegrationTests {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
-
-    @Autowired
-    private MockMvc mockMvc;
+class WorkoutLogIntegrationTests extends IntegrationTestBase {
 
     @Autowired
     private WorkoutLogRepository workoutLogRepository;
@@ -90,15 +79,8 @@ class WorkoutLogIntegrationTests {
         AuthResponse owner = registerUser("owner@example.com", "owner");
         AuthResponse otherUser = registerUser("other@example.com", "other");
 
-        String responseBody = createWorkoutLog(
-                owner.token(),
-                "Bench Press",
-                3,
-                5,
-                100.0,
-                LocalDate.of(2026, 4, 9),
-                "owner"
-        ).andReturn().getResponse().getContentAsString();
+        String responseBody = createWorkoutLog(owner.token(), "Bench Press", 3, 5, 100.0, LocalDate.of(2026, 4, 9), "owner")
+                .andReturn().getResponse().getContentAsString();
         String createdLogId = OBJECT_MAPPER.readTree(responseBody).get("id").asText();
 
         mockMvc.perform(put("/api/workouts/{workoutLogId}", createdLogId)
@@ -113,15 +95,8 @@ class WorkoutLogIntegrationTests {
     void deleteWorkoutLogRemovesOwnedLog() throws Exception {
         AuthResponse user = registerUser("ron@example.com", "ron");
 
-        String responseBody = createWorkoutLog(
-                user.token(),
-                "Row",
-                4,
-                10,
-                60.0,
-                LocalDate.of(2026, 4, 9),
-                "delete"
-        ).andReturn().getResponse().getContentAsString();
+        String responseBody = createWorkoutLog(user.token(), "Row", 4, 10, 60.0, LocalDate.of(2026, 4, 9), "delete")
+                .andReturn().getResponse().getContentAsString();
         String createdLogId = OBJECT_MAPPER.readTree(responseBody).get("id").asText();
 
         mockMvc.perform(delete("/api/workouts/{workoutLogId}", createdLogId)
@@ -140,10 +115,8 @@ class WorkoutLogIntegrationTests {
         AuthResponse owner = registerUser("owner@example.com", "owner");
         AuthResponse otherUser = registerUser("other@example.com", "other");
 
-        String responseBody = createWorkoutLog(
-                owner.token(), "Bench Press", 3, 5, 100.0,
-                LocalDate.of(2026, 4, 9), "owner"
-        ).andReturn().getResponse().getContentAsString();
+        String responseBody = createWorkoutLog(owner.token(), "Bench Press", 3, 5, 100.0, LocalDate.of(2026, 4, 9), "owner")
+                .andReturn().getResponse().getContentAsString();
         String createdLogId = OBJECT_MAPPER.readTree(responseBody).get("id").asText();
 
         mockMvc.perform(delete("/api/workouts/{workoutLogId}", createdLogId)
@@ -151,32 +124,13 @@ class WorkoutLogIntegrationTests {
                 .andExpect(status().isNotFound());
     }
 
-    private org.springframework.test.web.servlet.ResultActions createWorkoutLog(
-            String token,
-            String exercise,
-            int setsCompleted,
-            int repsCompleted,
-            double weightKg,
-            LocalDate workoutDate,
-            String notes
+    private ResultActions createWorkoutLog(
+            String token, String exercise, int sets, int reps, double weight, LocalDate date, String notes
     ) throws Exception {
         return mockMvc.perform(post("/api/workouts")
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(OBJECT_MAPPER.writeValueAsString(
-                        new WorkoutLogRequest(exercise, setsCompleted, repsCompleted, weightKg, workoutDate, notes))));
-    }
-
-    private AuthResponse registerUser(String email, String username) throws Exception {
-        String body = mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(OBJECT_MAPPER.writeValueAsString(new RegisterRequest(email, username, "Password123"))))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        return OBJECT_MAPPER.readValue(body, AuthResponse.class);
-    }
-
-    private String bearer(String token) {
-        return "Bearer " + token;
+                        new WorkoutLogRequest(exercise, sets, reps, weight, date, notes))));
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.ronproject.security.BearerTokenExtractor;
 import com.example.ronproject.user.CurrentUser;
 
 import jakarta.validation.Valid;
@@ -48,9 +49,9 @@ public class AuthController {
     }
 
     private String extractToken(String authHeader) {
-        if (!authHeader.startsWith("Bearer ")) {
+        if (!BearerTokenExtractor.hasBearerToken(authHeader)) {
             throw new IllegalArgumentException("Invalid Authorization header");
         }
-        return authHeader.substring(7);
+        return BearerTokenExtractor.extract(authHeader);
     }
 }

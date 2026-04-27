@@ -53,7 +53,7 @@ public class MemoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Memo not found"));
         memo.setTitle(request.title().trim());
         memo.setContent(request.content().trim());
-        return MemoResponse.from(memo);
+        return MemoResponse.from(memoRepository.save(memo));
     }
 
     @Transactional
